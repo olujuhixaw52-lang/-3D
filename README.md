@@ -1,6 +1,6 @@
 # 3D 沙盘集合 · 双鱼座：cygzs16888
 
-两个独立的 Three.js 单文件 3D 沙盘，各自独立页面、互不覆盖；页面之间可互相跳转。
+三个独立的 Three.js 单文件 3D 沙盘，各自独立页面、互不覆盖；页面之间可互相跳转。
 
 ## 在线入口
 
@@ -8,6 +8,7 @@
 |---|---|---|
 | 月面建设工地 与开发中心 | https://olujuhixaw52-lang.github.io/-3D/ | 主页（全景 / 入口 / 打印区 / 舱内视角） |
 | 动力电池 PACK 生产沙盘 | https://olujuhixaw52-lang.github.io/-3D/pack-line.html | 11 工位 · 三阶段产线 |
+| 先进 BMS 智控沙盘 | https://olujuhixaw52-lang.github.io/-3D/bms-line.html | 电芯组 · 监测层 · 主控 AI · 功率开关 · 交互 HMI |
 | PACK 解读版 MP4 | https://olujuhixaw52-lang.github.io/-3D/pack-line.mp4 | 旁白 + 字幕成片 |
 
 ![preview](preview.jpg)
@@ -43,12 +44,24 @@ Cell → Module → Pack → EOL，11 个工位沿产线排布，分三大阶段
 
 可拖拽旋转、缩放，点选工位查看说明；阶段以蓝 / 琥珀 / 绿色分区。解读版成片见上方 MP4 链接。
 
+## 三、先进 BMS 智控沙盘
+
+桌面级 BMS 实操沙盘，按电芯组 → 监测层 → 主控 AI → 功率开关 → 交互 HMI 五层排布：
+
+- **电芯组**：4S2P 八节电芯阵列，透明仓体、汇流排与平衡线、XT60 口与熔断器
+- **监测层**：多通道 AFE 板，电流传感器、NTC 探头与气压 / 气体传感器，热失控多参数预警
+- **主控 AI**：ESP32 / STM32 实时保护与轻量 ML 推理，可选 RPi 数字孪生小板
+- **功率开关**：MOSFET 模拟 SiC 分断、继电器冗余、预充电阻、主动均衡板与散热风扇
+- **交互 HMI**：触摸屏读数、故障注入按钮、CAN 模块、蜂鸣器与 RGB 状态灯
+
+安全低压演示，800V 高压仅为概念标注。可拖拽旋转、缩放，点选模块查看说明；右侧竖排视角键一键飞近对应层级。
+
 ## 本地运行
 
 ```bash
 python3 -m http.server 8000
 # 浏览器打开 http://localhost:8000
-# 月面基地：/index.html　PACK 沙盘：/pack-line.html
+# 月面基地：/index.html　PACK 沙盘：/pack-line.html　BMS 沙盘：/bms-line.html
 ```
 
 ## 致谢

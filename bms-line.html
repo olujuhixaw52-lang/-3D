@@ -1,0 +1,820 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<meta name="theme-color" content="#0d1113" />
+<title>先进 BMS 智控沙盘 · 双鱼座：cygzs16888</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect x='5' y='9' width='18' height='14' rx='2' fill='none' stroke='%233fc3d8' stroke-width='1.6'/%3E%3Crect x='25' y='13' width='3' height='6' rx='1' fill='%233fc3d8'/%3E%3Cpath d='M11 16h3l1.5-3 2 6 1.5-3H21' fill='none' stroke='%2337c978' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E" />
+<style>
+  :root {
+    --ink: #e9eef2;
+    --muted: #8da4b4;
+    --line: rgba(178, 205, 222, 0.18);
+    --cyan: #3fc3d8;
+    --blue: #5b7d94;
+    --steel: #6f9fc9;
+    --amber: #f2b134;
+    --green: #37c978;
+    --red: #e0564b;
+    --display: "DIN Alternate", "Avenir Next Condensed", "Helvetica Neue", "Segoe UI", sans-serif;
+    --mono: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    width: 100%; height: 100%; margin: 0; padding: 0;
+    overflow: hidden; background: #0d1113; color: var(--ink);
+    font-family: var(--display);
+    -webkit-font-smoothing: antialiased;
+  }
+  #stage { position: fixed; inset: 0; z-index: 0; }
+  #stage canvas { display: block; width: 100%; height: 100%; outline: none; cursor: grab; }
+  #stage canvas:active { cursor: grabbing; }
+  #label-layer { position: fixed; inset: 0; z-index: 3; pointer-events: none; }
+  #vignette {
+    position: fixed; inset: 0; z-index: 2; pointer-events: none;
+    background:
+      radial-gradient(ellipse at 50% 42%, transparent 34%, rgba(0,0,0,0.08) 58%, rgba(0,0,0,0.46) 100%),
+      linear-gradient(to bottom, rgba(0,0,0,0.22), transparent 18%, transparent 82%, rgba(0,0,0,0.26));
+  }
+
+  #brand {
+    position: fixed; top: clamp(18px, 2.2vw, 30px); left: clamp(18px, 2.4vw, 34px);
+    z-index: 5; pointer-events: none; user-select: none;
+  }
+  #brand .kicker {
+    font-family: var(--mono); font-size: 9px; letter-spacing: 0.24em;
+    color: rgba(157, 188, 207, 0.62); text-transform: uppercase; margin-bottom: 7px;
+  }
+  #brand h1 {
+    margin: 0; font-weight: 600; font-size: clamp(16px, 1.5vw, 22px);
+    letter-spacing: 0.08em; line-height: 1.12; color: #f0f3f4; text-transform: uppercase;
+  }
+  #brand h1 em { color: var(--cyan); font-style: normal; }
+  #brand .sub {
+    margin-top: 6px; font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
+    color: rgba(171, 195, 211, 0.55); text-transform: uppercase;
+  }
+  #brand .sign {
+    margin-top: 5px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    color: rgba(63, 195, 216, 0.82);
+  }
+  #brand .cross-nav {
+    display: inline-block; margin-top: 6px; pointer-events: auto;
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
+    color: rgba(157, 188, 207, 0.82); text-decoration: none;
+    border-bottom: 1px solid rgba(157, 188, 207, 0.3);
+  }
+  #brand .cross-nav:hover { color: #f0f3f4; border-color: rgba(63,195,216,0.6); }
+  #brand .nav-row { margin-top: 6px; display: flex; gap: 12px; }
+
+  #telemetry {
+    position: fixed; top: clamp(18px, 2.1vw, 30px); right: clamp(18px, 2.4vw, 34px);
+    z-index: 5; text-align: right; font-family: var(--mono); font-size: 9px;
+    line-height: 1.9; letter-spacing: 0.14em; color: rgba(193, 217, 232, 0.5);
+    pointer-events: none; text-transform: uppercase;
+  }
+  #telemetry .sig {
+    display: inline-block; width: 5px; height: 5px; margin-right: 8px; border-radius: 50%;
+    background: var(--green); box-shadow: 0 0 9px rgba(55, 201, 120, 0.9); vertical-align: 1px;
+    animation: sigPulse 3.2s ease-in-out infinite;
+  }
+  #telemetry .grid { margin-top: 7px; display: grid; grid-template-columns: auto auto; gap: 3px 14px; justify-content: end; }
+  #telemetry .grid span { color: rgba(157, 188, 207, 0.5); }
+  #telemetry .grid b { color: rgba(226, 239, 245, 0.9); font-weight: 600; }
+
+  #hud {
+    position: fixed; left: clamp(16px, 2.4vw, 34px); bottom: clamp(16px, 2.4vw, 28px);
+    z-index: 5; width: max-content; max-width: calc(100vw - 32px);
+    padding: 13px 18px 12px 16px; border: 1px solid var(--line);
+    border-left: 2px solid rgba(63, 195, 216, 0.86);
+    background: linear-gradient(115deg, rgba(10,14,17,0.82), rgba(13,19,23,0.5));
+    backdrop-filter: blur(13px) saturate(115%);
+    -webkit-backdrop-filter: blur(13px) saturate(115%);
+    box-shadow: 0 12px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.035);
+    pointer-events: none;
+  }
+  #hud .eyebrow {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em;
+    color: rgba(157, 188, 207, 0.62); text-transform: uppercase; margin-bottom: 6px;
+  }
+  #hud .hint {
+    font-family: var(--mono); font-size: 10px; letter-spacing: 0.08em;
+    color: rgba(171, 195, 211, 0.72); white-space: nowrap; line-height: 1.7;
+  }
+  #hud .hint b { color: rgba(63, 195, 216, 0.9); font-weight: 600; }
+
+  /* 右侧竖排视角按钮组（边框操作键） */
+  #views {
+    position: fixed; right: clamp(22px, 2.7vw, 42px); top: 47%;
+    z-index: 6; width: 132px; transform: translateY(-50%);
+    font-family: var(--mono); user-select: none;
+  }
+  #views .side-head {
+    display: flex; align-items: center; gap: 10px; justify-content: flex-end;
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.3em;
+    color: rgba(157, 188, 207, 0.55); text-transform: uppercase; margin-bottom: 4px;
+  }
+  #views .side-head::before { content: ""; flex: 1; height: 1px; background: rgba(170, 199, 215, 0.13); }
+  #views .view-btn {
+    appearance: none; border: 0; background: transparent; cursor: pointer;
+    width: 100%; display: flex; align-items: baseline; justify-content: flex-end; gap: 8px;
+    padding: 6px 0 7px; font-family: "PingFang SC", "Hiragino Sans GB", sans-serif;
+    font-size: 10px; letter-spacing: 0.18em; color: rgba(202, 218, 226, 0.55);
+    transition: color 0.24s ease, transform 0.24s ease; position: relative;
+  }
+  #views .view-btn small {
+    font-family: var(--mono); font-size: 6px; letter-spacing: 0.09em;
+    color: rgba(147, 181, 199, 0.32); transition: color 0.24s ease;
+  }
+  #views .view-btn::after {
+    content: ""; position: absolute; right: -10px; top: 50%; width: 2px; height: 0;
+    transform: translateY(-50%); background: var(--cyan); box-shadow: 0 0 9px rgba(63,195,216,0.8);
+    transition: height 0.24s ease;
+  }
+  #views .view-btn:hover, #views .view-btn.active { color: #f4f7f8; transform: translateX(-2px); }
+  #views .view-btn:hover small, #views .view-btn.active small { color: rgba(63, 195, 216, 0.72); }
+  #views .view-btn.active::after { height: 17px; }
+  #views .view-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
+
+  #toolbar {
+    position: fixed; right: clamp(16px, 2.4vw, 34px); bottom: clamp(16px, 2.4vw, 28px);
+    z-index: 6; display: flex; gap: 10px;
+  }
+  #toolbar button {
+    width: 44px; height: 44px; display: grid; place-items: center; cursor: pointer;
+    border: 1px solid var(--line); border-radius: 10px; color: rgba(213, 229, 239, 0.82);
+    background: rgba(12, 17, 21, 0.72); backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); transition: background 150ms ease, border-color 150ms ease, transform 90ms ease;
+  }
+  #toolbar button:hover { background: rgba(24, 32, 38, 0.85); border-color: rgba(63,195,216,0.4); }
+  #toolbar button:active { transform: scale(0.97); }
+  #toolbar button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  #toolbar button svg { width: 18px; height: 18px; }
+
+  .station-tag {
+    font-family: var(--mono); pointer-events: none; user-select: none;
+    padding: 5px 9px 6px; border: 1px solid var(--line); border-left: 2px solid var(--tc, var(--cyan));
+    background: linear-gradient(115deg, rgba(10,14,17,0.86), rgba(13,19,23,0.55));
+    backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); border-radius: 6px;
+    white-space: nowrap; transform: translateY(-6px);
+  }
+  .station-tag .num {
+    font-size: 8px; letter-spacing: 0.2em; color: var(--tc, var(--cyan)); text-transform: uppercase;
+  }
+  .station-tag .cn { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: #f0f3f4; margin-top: 1px; }
+
+  /* 模块信息卡 */
+  #info-card {
+    position: fixed; left: clamp(16px, 2.4vw, 34px); bottom: clamp(88px, 12vw, 118px);
+    z-index: 5; max-width: 320px; padding: 13px 16px 12px;
+    border: 1px solid var(--line); border-left: 2px solid var(--cyan);
+    background: linear-gradient(115deg, rgba(10,14,17,0.88), rgba(13,19,23,0.6));
+    backdrop-filter: blur(13px) saturate(115%); -webkit-backdrop-filter: blur(13px) saturate(115%);
+    border-radius: 8px; opacity: 0; visibility: hidden; transform: translateY(6px);
+    transition: opacity 200ms ease, transform 200ms ease, visibility 200ms ease;
+  }
+  #info-card.show { opacity: 1; visibility: visible; transform: translateY(0); }
+  #info-card .ic-head { font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em; color: var(--cyan); text-transform: uppercase; margin-bottom: 5px; }
+  #info-card .ic-title { font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: #f0f3f4; margin-bottom: 5px; }
+  #info-card .ic-desc { font-family: var(--mono); font-size: 10px; line-height: 1.7; letter-spacing: 0.04em; color: rgba(171,195,211,0.78); }
+
+  #loader {
+    position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
+    background: #0d1113; transition: opacity 0.8s ease, visibility 0.8s ease;
+  }
+  #loader.hidden { opacity: 0; visibility: hidden; }
+  #loader .inner { width: min(320px, 70vw); text-align: center; }
+  #loader .tag {
+    font-family: var(--mono); font-size: 8px; letter-spacing: 0.36em;
+    color: rgba(63,195,216,0.72); text-transform: uppercase; margin-bottom: 14px;
+  }
+  #loader .name {
+    font-family: var(--display); font-size: clamp(18px, 2.3vw, 26px);
+    letter-spacing: 0.16em; text-transform: uppercase; color: #eef2f4;
+  }
+  #loader .bar {
+    position: relative; height: 1px; margin-top: 20px; overflow: hidden;
+    background: rgba(158, 191, 214, 0.16);
+  }
+  #loader .bar::after {
+    content: ""; position: absolute; top: 0; left: -35%; width: 35%; height: 100%;
+    background: linear-gradient(90deg, transparent, var(--cyan), transparent);
+    animation: loadScan 1.5s cubic-bezier(.45,0,.55,1) infinite;
+  }
+  @keyframes loadScan { 0% { left: -35%; } 100% { left: 100%; } }
+  @keyframes sigPulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+  @media (max-width: 720px) {
+    #telemetry .grid { display: none; }
+    #hud { padding: 10px 13px 9px 12px; }
+    #hud .hint { font-size: 9px; white-space: normal; }
+    .station-tag { padding: 5px 8px 6px; }
+    .station-tag .cn { font-size: 11px; }
+    #views { width: 104px; right: 14px; }
+    #views .view-btn small { display: none; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #loader .bar::after, #telemetry .sig { animation: none; }
+  }
+</style>
+</head>
+<body>
+<div id="stage" aria-label="先进 BMS 智控沙盘 3D"></div>
+<div id="label-layer" aria-hidden="true"></div>
+<div id="vignette"></div>
+
+<header id="brand">
+  <div class="kicker">Edge-AI BMS Bench · 02</div>
+  <h1>先进 <em>BMS</em> 智控沙盘</h1>
+  <div class="sub">Cells · AFE · MCU · Power · HMI · Interactive 3D Bench</div>
+  <div class="sign">双鱼座：cygzs16888</div>
+  <div class="nav-row">
+    <a class="cross-nav" href="index.html">← 月面建设工地</a>
+    <a class="cross-nav" href="pack-line.html">PACK 沙盘 →</a>
+  </div>
+</header>
+
+<aside id="telemetry">
+  <div><span class="sig"></span>BMS ONLINE · 800V CONCEPT / LV LAB</div>
+  <div class="grid">
+    <span>SOC</span><b id="tel-soc">86.0%</b>
+    <span>SOH</span><b id="tel-soh">98.2%</b>
+    <span>电流</span><b id="tel-amp">12.4 A</b>
+    <span>最高温</span><b id="tel-temp">28.6 °C</b>
+    <span>压差</span><b id="tel-dv">12 mV</b>
+    <span>CAN</span><b id="tel-can">ONLINE</b>
+  </div>
+</aside>
+
+<aside id="hud">
+  <div class="eyebrow">操作 / CONTROLS</div>
+  <div class="hint"><b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <b>右键拖动</b> 平移 · <b>点选模块</b> 查看说明</div>
+</aside>
+
+<nav id="views" aria-label="视角切换">
+  <div class="side-head">VIEW / 视角</div>
+  <button class="view-btn active" data-view="overview">全景<small>OVERVIEW</small></button>
+  <button class="view-btn" data-view="cells">电芯组<small>CELLS</small></button>
+  <button class="view-btn" data-view="afe">监测层<small>AFE</small></button>
+  <button class="view-btn" data-view="mcu">主控 AI<small>MCU / AI</small></button>
+  <button class="view-btn" data-view="power">功率开关<small>POWER</small></button>
+  <button class="view-btn" data-view="hmi">交互 HMI<small>HMI</small></button>
+</nav>
+
+<aside id="info-card" aria-live="polite">
+  <div class="ic-head" id="ic-head">MODULE</div>
+  <div class="ic-title" id="ic-title"></div>
+  <div class="ic-desc" id="ic-desc"></div>
+</aside>
+
+<nav id="toolbar" aria-label="播放控制">
+  <button id="btn-pause" type="button" title="暂停 / 继续自动环绕" aria-label="暂停自动环绕">
+    <svg viewBox="0 0 16 16" fill="none"><rect x="4" y="3" width="2.4" height="10" rx="0.5" fill="currentColor"/><rect x="9.6" y="3" width="2.4" height="10" rx="0.5" fill="currentColor"/></svg>
+  </button>
+  <button id="btn-reset" type="button" title="重置视角" aria-label="重置视角">
+    <svg viewBox="0 0 16 16" fill="none"><path d="M3.2 6.2A5.2 5.2 0 1 1 2.9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M2.8 2.7v3.7H6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+  </button>
+</nav>
+
+<div id="loader">
+  <div class="inner">
+    <div class="tag">Edge-AI BMS Bench</div>
+    <div class="name">智控沙盘初始化</div>
+    <div class="bar"></div>
+  </div>
+</div>
+
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://fastly.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://fastly.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+
+<script type="module">
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { CSS2DRenderer, CSS2DObject } from 'three/addons/renderers/CSS2DRenderer.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+
+/* ============ 0. 状态与工具 ============ */
+const stage = document.getElementById('stage');
+const labelLayer = document.getElementById('label-layer');
+const clock = new THREE.Clock();
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const APP = {
+  renderer: null, scene: null, camera: null, controls: null,
+  composer: null, labelRenderer: null, running: true, elapsed: 0
+};
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+
+// 五个分层模块：cells 电芯 / afe 监测 / mcu 主控 / power 功率 / hmi 交互
+const MODS = [
+  { id: 'cells', cn: '电芯组',   en: 'CELL ARRAY',     x: -6.4, tc: '#5b7d94',
+    desc: '4S2P 配置 8 节电芯阵列，透明仓体便于观察；镍带串并联、平衡线中点采样，XT60 充放电口与主熔断器成组布置。' },
+  { id: 'afe',  cn: '监测层',   en: 'AFE SENSING',    x: -3.2, tc: '#3fc3d8',
+    desc: '多通道 AFE 监测板，串联电流传感器（INA226/分流）、NTC 温度探头与气压/气体传感器，构成热失控多参数预警采集端。' },
+  { id: 'mcu',  cn: '主控 AI',  en: 'MCU / EDGE AI',  x:  0.0, tc: '#6f9fc9',
+    desc: 'ESP32 / STM32 实时保护与轻量 ML 推理，混合 SOC/SOH 估算与异常检测；可选 Raspberry Pi 跑等效电路模型做数字孪生。' },
+  { id: 'power',cn: '功率开关', en: 'POWER STAGE',    x:  3.2, tc: '#f2b134',
+    desc: 'N-MOSFET 固态开关模拟 SiC 高速分断，继电器冗余切断，含预充电阻与主动均衡板；散热片与风扇由温度 PWM 控制。' },
+  { id: 'hmi',  cn: '交互 HMI', en: 'HMI / CAN',     x:  6.4, tc: '#37c978',
+    desc: 'OLED/触摸屏显示 SOC、单体电压、温度、电流与 AI 结果；故障注入按钮模拟过压/欠压/过温/短路，CAN 模块对接仪表盘节点。' }
+];
+
+const VIEWS = {
+  overview: { pos: new THREE.Vector3(0, 10, 19),   target: new THREE.Vector3(0, 1.2, 0),    minDistance: 6,  maxDistance: 34 },
+  cells:    { pos: new THREE.Vector3(-6.4, 4.4, 7.6), target: new THREE.Vector3(-6.4, 1.1, 0), minDistance: 2.4, maxDistance: 16 },
+  afe:      { pos: new THREE.Vector3(-3.2, 4.0, 7.0), target: new THREE.Vector3(-3.2, 1.0, 0), minDistance: 2.2, maxDistance: 15 },
+  mcu:      { pos: new THREE.Vector3(0,    4.0, 7.0), target: new THREE.Vector3(0,    1.0, 0), minDistance: 2.2, maxDistance: 15 },
+  power:    { pos: new THREE.Vector3(3.2,  4.0, 7.0), target: new THREE.Vector3(3.2,  1.0, 0), minDistance: 2.2, maxDistance: 15 },
+  hmi:      { pos: new THREE.Vector3(6.4,  4.4, 7.6), target: new THREE.Vector3(6.4,  1.1, 0), minDistance: 2.4, maxDistance: 16 }
+};
+
+const GEO = {
+  box:  new THREE.BoxGeometry(1, 1, 1),
+  cyl:  new THREE.CylinderGeometry(1, 1, 1, 16, 1, false),
+  cyl8: new THREE.CylinderGeometry(1, 1, 1, 8, 1, false),
+  sph:  new THREE.SphereGeometry(1, 18, 12),
+  cone: new THREE.ConeGeometry(1, 1, 16, 1, false),
+  torus:new THREE.TorusGeometry(1, 0.08, 6, 24)
+};
+
+const MAT = {};
+function mat(key, opts) { if (!MAT[key]) MAT[key] = new THREE.MeshStandardMaterial(opts); return MAT[key]; }
+
+function buildMaterials() {
+  mat('floor',   { color: 0x171c1f, roughness: 0.92, metalness: 0.0 });
+  mat('plinth',  { color: 0x1f2529, roughness: 0.85, metalness: 0.05 });
+  mat('cabinet', { color: 0x2b3238, roughness: 0.6,  metalness: 0.3 });
+  mat('frame',   { color: 0x6b767d, roughness: 0.38, metalness: 0.85 });
+  mat('pcb',     { color: 0x1f3330, roughness: 0.6,  metalness: 0.1 });
+  mat('pcb2',    { color: 0x24303a, roughness: 0.6,  metalness: 0.1 });
+  mat('chip',    { color: 0x191d20, roughness: 0.5,  metalness: 0.2 });
+  mat('cell',    { color: 0xc8cdd1, roughness: 0.34, metalness: 0.9 });
+  mat('cellCap', { color: 0xd9534f, roughness: 0.45, metalness: 0.2 });
+  mat('busbar',  { color: 0xc98a3a, roughness: 0.32, metalness: 0.9 });
+  mat('wire',    { color: 0x22272a, roughness: 0.7,  metalness: 0.0 });
+  mat('wireB',   { color: 0x3a6ea5, roughness: 0.7,  metalness: 0.0 });
+  mat('wireY',   { color: 0xd8b83a, roughness: 0.7,  metalness: 0.0 });
+  mat('cyan',    { color: 0x3fc3d8, roughness: 0.5,  metalness: 0.1, emissive: 0x1c7d8e, emissiveIntensity: 0.8 });
+  mat('blue',    { color: 0x5b7d94, roughness: 0.7,  metalness: 0.0 });
+  mat('steel',   { color: 0x6f9fc9, roughness: 0.5,  metalness: 0.2 });
+  mat('amber',   { color: 0xf2b134, roughness: 0.5,  metalness: 0.1 });
+  mat('green',   { color: 0x37c978, roughness: 0.4,  metalness: 0.1, emissive: 0x1f9d58, emissiveIntensity: 0.9 });
+  mat('red',     { color: 0xe0564b, roughness: 0.4,  metalness: 0.1, emissive: 0x9c2b23, emissiveIntensity: 0.7 });
+  mat('screen',  { color: 0x0d2a2e, roughness: 0.35, metalness: 0.1, emissive: 0x1a7882, emissiveIntensity: 0.85 });
+  mat('glass',   { color: 0x9fc6d4, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.16 });
+  mat('pick',    { color: 0x000000, transparent: true, opacity: 0, depthWrite: false });
+  mat('heatsink',{ color: 0x8a9297, roughness: 0.42, metalness: 0.85 });
+}
+
+function mesh(geo, material, x, y, z, sx, sy, sz, parent) {
+  const m = new THREE.Mesh(geo, material);
+  m.position.set(x, y, z); m.scale.set(sx, sy, sz);
+  m.castShadow = true; m.receiveShadow = true;
+  (parent || APP.scene).add(m);
+  return m;
+}
+
+/* ============ 1. 渲染器 / 场景 / 相机 / 环境 ============ */
+function initialPixelRatio() {
+  if (reducedMotion) return 1;
+  const mobile = window.innerWidth < 720;
+  return Math.min(window.devicePixelRatio || 1, mobile ? 1.5 : 2);
+}
+
+function initRenderer() {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, powerPreference: 'high-performance', stencil: false, depth: true });
+  renderer.setPixelRatio(initialPixelRatio());
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.shadowMap.enabled = true;
+  renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+  renderer.domElement.setAttribute('aria-label', '先进 BMS 智控沙盘 3D 视图');
+  stage.appendChild(renderer.domElement);
+  APP.renderer = renderer;
+}
+
+function initScene() {
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x0d1113);
+  scene.fog = new THREE.Fog(0x0d1113, 30, 70);
+  const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.05, 200);
+  camera.position.set(0, 10, 19);
+  const controls = new OrbitControls(camera, APP.renderer.domElement);
+  controls.target.set(0, 1.2, 0);
+  controls.enableDamping = true; controls.dampingFactor = 0.06;
+  controls.rotateSpeed = 0.55; controls.zoomSpeed = 0.8; controls.panSpeed = 0.6;
+  controls.touches.ONE = THREE.TOUCH.ROTATE; controls.touches.TWO = THREE.TOUCH.DOLLY_PAN;
+  controls.screenSpacePanning = true;
+  controls.minDistance = 6; controls.maxDistance = 34;
+  controls.minPolarAngle = 0.32; controls.maxPolarAngle = Math.PI * 0.49;
+  controls.autoRotate = !reducedMotion; controls.autoRotateSpeed = 0.3;
+  controls.update();
+  APP.scene = scene; APP.camera = camera; APP.controls = controls;
+}
+
+function initEnvironment() {
+  const pmrem = new THREE.PMREMGenerator(APP.renderer);
+  pmrem.compileEquirectangularShader();
+  const room = new RoomEnvironment();
+  const envRT = pmrem.fromScene(room, 0.04);
+  APP.scene.environment = envRT.texture;
+  room.dispose(); pmrem.dispose();
+}
+
+function initLights() {
+  const scene = APP.scene;
+  scene.add(new THREE.AmbientLight(0x2a343c, 0.5));
+  scene.add(new THREE.HemisphereLight(0x8fb4cf, 0x141719, 0.5));
+  const key = new THREE.DirectionalLight(0xdfeef7, 2.1);
+  key.position.set(12, 18, 10); key.castShadow = true;
+  key.shadow.mapSize.set(2048, 2048);
+  key.shadow.camera.left = -12; key.shadow.camera.right = 12;
+  key.shadow.camera.top = 10;  key.shadow.camera.bottom = -10;
+  key.shadow.camera.near = 2;  key.shadow.camera.far = 50;
+  key.shadow.bias = -0.0004;
+  scene.add(key);
+  const fill = new THREE.DirectionalLight(0x9fc8ea, 0.55); fill.position.set(-14, 9, -10); scene.add(fill);
+  const rim = new THREE.DirectionalLight(0xcfe6f2, 0.5); rim.position.set(-4, 12, -18); scene.add(rim);
+}
+
+function initComposer() {
+  const w = window.innerWidth, h = window.innerHeight, pr = APP.renderer.getPixelRatio();
+  const caps = APP.renderer.capabilities;
+  const supportsMSAA = !!caps.isWebGL2 && (typeof caps.maxSamples !== 'number' || caps.maxSamples >= 4);
+  const targetOptions = { type: THREE.HalfFloatType };
+  if (supportsMSAA) targetOptions.samples = 4;
+  const target = new THREE.WebGLRenderTarget(Math.round(w * pr), Math.round(h * pr), targetOptions);
+  const composer = new EffectComposer(APP.renderer, target);
+  composer.setSize(w, h);
+  composer.addPass(new RenderPass(APP.scene, APP.camera));
+  const bloom = new UnrealBloomPass(new THREE.Vector2(w, h), 0.3, 0.5, 1.15);
+  composer.addPass(bloom);
+  composer.addPass(new OutputPass());
+  if (!supportsMSAA) composer.addPass(new SMAAPass(Math.round(w * pr), Math.round(h * pr)));
+  APP.composer = composer;
+  APP.labelRenderer = new CSS2DRenderer();
+  APP.labelRenderer.setSize(w, h);
+  APP.labelRenderer.domElement.style.position = 'fixed';
+  APP.labelRenderer.domElement.style.top = '0';
+  APP.labelRenderer.domElement.style.left = '0';
+  APP.labelRenderer.domElement.style.pointerEvents = 'none';
+  labelLayer.appendChild(APP.labelRenderer.domElement);
+}
+
+/* ============ 2. 桌面底座 ============ */
+function buildSite() {
+  mesh(GEO.box, MAT.plinth, 0, -0.2, 0, 17.4, 0.4, 9.4, APP.scene);
+  mesh(GEO.box, MAT.floor, 0, 0.005, 0, 17.0, 0.02, 9.0, APP.scene);
+  // 分区色带：沿台面前后沿标出五个模块归属
+  MODS.forEach((m) => {
+    const cm = mat('band_' + m.id, { color: new THREE.Color(m.tc), roughness: 0.7, metalness: 0.0 });
+    mesh(GEO.box, cm, m.x, 0.02, -4.35, 2.9, 0.012, 0.22, APP.scene).receiveShadow = true;
+    mesh(GEO.box, cm, m.x, 0.02,  4.35, 2.9, 0.012, 0.22, APP.scene).receiveShadow = true;
+  });
+}
+
+/* === 模块建模 === */
+const ANIM = { fans: [], beacons: [], leds: [] };
+
+function cell21700(x, y, z, parent) {
+  mesh(GEO.cyl, MAT.cell, x, y, z, 0.16, 0.62, 0.16, parent);
+  mesh(GEO.cyl, MAT.cellCap, x, y + 0.32, z, 0.1, 0.03, 0.1, parent);
+}
+
+function beacon(x, z, colorMat, parent, base = 0.14) {
+  mesh(GEO.cyl, MAT.frame, x, 0.9, z, 0.045, 1.6, 0.045, parent);
+  const lamp = mesh(GEO.sph, colorMat, x, 1.78, z, base, base, base, parent);
+  ANIM.beacons.push({ mesh: lamp, base, phase: Math.random() * Math.PI * 2 });
+}
+
+function modGroup(def) {
+  const g = new THREE.Group();
+  g.position.set(def.x, 0, 0);
+  g.userData.modId = def.id;
+  // 不可见拾取盒：扩大点选区域
+  const pick = mesh(GEO.box, MAT.pick, 0, 0.9, 0, 2.8, 1.8, 2.0, g);
+  pick.castShadow = false; pick.receiveShadow = false;
+  APP.scene.add(g);
+  return g;
+}
+
+function buildCells(g) {
+  // 透明电池仓：底板 + 四壁
+  mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.6, 0.1, 1.8, g);
+  mesh(GEO.box, MAT.glass, 0, 1.15, -0.85, 2.6, 1.2, 0.05, g);
+  mesh(GEO.box, MAT.glass, 0, 1.15,  0.85, 2.6, 1.2, 0.05, g);
+  mesh(GEO.box, MAT.glass, -1.3, 1.15, 0, 0.05, 1.2, 1.8, g);
+  mesh(GEO.box, MAT.glass,  1.3, 1.15, 0, 0.05, 1.2, 1.8, g);
+  // 4S2P：两排四列电芯
+  for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++)
+    cell21700(-0.87 + i * 0.58, 0.92, -0.34 + j * 0.68, g);
+  // 顶部汇流排与平衡线
+  mesh(GEO.box, MAT.busbar, 0, 1.28, 0, 2.3, 0.05, 0.2, g);
+  for (let i = 0; i < 4; i++) {
+    const w = mesh(GEO.cyl, MAT.wireY, -0.87 + i * 0.58, 1.1, 0.4, 0.02, 0.5, 0.02, g);
+    w.rotation.z = Math.PI / 2;
+  }
+  // XT60 接口 + 熔断器
+  mesh(GEO.box, MAT.cabinet, -1.35, 0.55, 0.7, 0.3, 0.22, 0.3, g);
+  mesh(GEO.cyl, MAT.frame, 1.35, 0.55, -0.7, 0.12, 0.3, 0.12, g);
+  beacon(-1.2, -0.85, MAT.green, g);
+}
+
+function buildAfe(g) {
+  // AFE 主板
+  mesh(GEO.box, MAT.pcb, 0, 0.55, 0, 2.4, 0.06, 1.6, g);
+  // AFE 芯片 ×2
+  mesh(GEO.box, MAT.chip, -0.55, 0.66, -0.2, 0.5, 0.1, 0.5, g);
+  mesh(GEO.box, MAT.chip,  0.55, 0.66, -0.2, 0.5, 0.1, 0.5, g);
+  // 电流传感器（分流/模块）
+  mesh(GEO.box, MAT.cabinet, 0, 0.66, 0.5, 0.7, 0.14, 0.34, g);
+  // NTC 探头
+  for (let i = 0; i < 3; i++)
+    mesh(GEO.sph, MAT.red, -0.7 + i * 0.7, 0.72, -0.6, 0.07, 0.07, 0.07, g);
+  // 气压 / 气体传感器（热失控模拟区）
+  mesh(GEO.box, MAT.cabinet, 0.85, 0.7, 0.5, 0.4, 0.22, 0.34, g);
+  mesh(GEO.cyl, MAT.frame, 0.85, 0.86, 0.5, 0.08, 0.1, 0.08, g);
+  // 采样线束
+  for (let i = 0; i < 3; i++) {
+    const w = mesh(GEO.cyl, MAT.wireB, -0.6 + i * 0.6, 0.62, 0.0, 0.022, 0.7, 0.022, g);
+    w.rotation.z = Math.PI / 2;
+  }
+  beacon(-1.1, 0.8, MAT.cyan, g);
+}
+
+function buildMcu(g) {
+  // ESP32 主控大板
+  mesh(GEO.box, MAT.pcb2, 0, 0.55, 0, 2.3, 0.06, 1.7, g);
+  mesh(GEO.box, MAT.chip, -0.3, 0.66, 0, 0.55, 0.12, 0.5, g);
+  // 排针
+  for (let i = 0; i < 6; i++)
+    mesh(GEO.cyl8, MAT.frame, 0.2 + i * 0.16, 0.64, 0.6, 0.03, 0.12, 0.03, g);
+  // 天线
+  const ant = mesh(GEO.cyl, MAT.frame, -0.95, 0.95, -0.5, 0.03, 0.7, 0.03, g);
+  ant.rotation.z = 0.25;
+  // 可选 RPi 数字孪生小板叠放
+  mesh(GEO.box, MAT.pcb, 0.55, 0.78, -0.35, 0.7, 0.05, 0.6, g);
+  mesh(GEO.box, MAT.chip, 0.55, 0.86, -0.35, 0.3, 0.08, 0.3, g);
+  // 状态 LED（呼吸）
+  const led1 = mesh(GEO.sph, MAT.green, -0.9, 0.64, 0.5, 0.07, 0.07, 0.07, g);
+  const led2 = mesh(GEO.sph, MAT.cyan, -0.7, 0.64, 0.5, 0.07, 0.07, 0.07, g);
+  ANIM.leds.push({ mesh: led1, base: 0.07, phase: 0 });
+  ANIM.leds.push({ mesh: led2, base: 0.07, phase: 1.4 });
+  beacon(1.05, 0.8, MAT.steel, g);
+}
+
+function buildPower(g) {
+  // 功率底板
+  mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.5, 0.08, 1.7, g);
+  // MOSFET ×2 + 散热片齿
+  [-0.55, 0.55].forEach((dx) => {
+    mesh(GEO.box, MAT.chip, dx, 0.66, -0.2, 0.5, 0.16, 0.4, g);
+    for (let i = 0; i < 5; i++)
+      mesh(GEO.box, MAT.heatsink, dx - 0.16 + i * 0.08, 0.86, -0.2, 0.03, 0.28, 0.36, g);
+  });
+  // 继电器冗余 ×2
+  mesh(GEO.box, MAT.cabinet, -0.7, 0.7, 0.5, 0.42, 0.3, 0.36, g);
+  mesh(GEO.box, MAT.cabinet,  0.7, 0.7, 0.5, 0.42, 0.3, 0.36, g);
+  // 预充电阻
+  mesh(GEO.cyl, MAT.amber, 0, 0.72, -0.7, 0.1, 0.4, 0.1, g);
+  // 主动均衡板
+  mesh(GEO.box, MAT.pcb, 0, 0.6, 0.75, 1.2, 0.05, 0.3, g);
+  // 散热风扇（旋转）
+  const fan = new THREE.Group(); fan.position.set(1.05, 0.7, -0.7); g.add(fan);
+  mesh(GEO.cyl, MAT.frame, 0, 0, 0, 0.28, 0.06, 0.28, fan);
+  const blades = new THREE.Group(); fan.add(blades);
+  for (let i = 0; i < 4; i++) {
+    const b = mesh(GEO.box, MAT.heatsink, 0, 0.04, 0, 0.22, 0.02, 0.07, blades);
+    b.rotation.y = i * Math.PI / 2;
+  }
+  ANIM.fans.push(blades);
+  // 铜排
+  mesh(GEO.box, MAT.busbar, 0, 0.6, -0.45, 2.0, 0.05, 0.16, g);
+  // 紧急切断按钮
+  mesh(GEO.cyl8, MAT.red, 0, 0.64, 0.85, 0.16, 0.16, 0.16, g);
+  beacon(-1.1, 0.8, MAT.amber, g);
+}
+
+function buildHmi(g) {
+  // 触摸屏/ OLED
+  mesh(GEO.box, MAT.cabinet, 0, 0.95, -0.3, 1.7, 0.9, 0.14, g);
+  mesh(GEO.box, MAT.screen, 0, 0.95, -0.21, 1.4, 0.66, 0.04, g);
+  // 屏内读数条：SOC / 单体电压 / 温度
+  mesh(GEO.box, MAT.cyan,  0, 1.12, -0.185, 1.0, 0.05, 0.02, g);
+  mesh(GEO.box, MAT.green, -0.2, 0.96, -0.185, 0.6, 0.04, 0.02, g);
+  mesh(GEO.box, MAT.amber, -0.3, 0.81, -0.185, 0.4, 0.04, 0.02, g);
+  // 故障注入按钮 ×4
+  const btnMats = [MAT.red, MAT.amber, MAT.blue, MAT.chip];
+  for (let i = 0; i < 4; i++)
+    mesh(GEO.cyl8, btnMats[i], -0.66 + i * 0.44, 0.62, 0.5, 0.13, 0.12, 0.13, g);
+  // CAN 模块 + 蜂鸣器
+  mesh(GEO.box, MAT.pcb2, -0.7, 0.55, 0.0, 0.5, 0.06, 0.4, g);
+  mesh(GEO.cyl, MAT.cabinet, 0.75, 0.6, 0.0, 0.14, 0.2, 0.14, g);
+  // RGB LED 条
+  const rgb = [MAT.red, MAT.amber, MAT.green, MAT.cyan];
+  for (let i = 0; i < 4; i++) {
+    const led = mesh(GEO.sph, rgb[i], -0.45 + i * 0.3, 0.66, 0.8, 0.07, 0.07, 0.07, g);
+    ANIM.leds.push({ mesh: led, base: 0.07, phase: i * 0.8 });
+  }
+  beacon(1.15, 0.8, MAT.green, g);
+}
+
+function tag(def, idx) {
+  const div = document.createElement('div');
+  div.className = 'station-tag';
+  div.style.setProperty('--tc', def.tc);
+  div.innerHTML = `<div class="num">${String(idx + 1).padStart(2, '0')} · ${def.en}</div><div class="cn">${def.cn}</div>`;
+  const obj = new CSS2DObject(div);
+  obj.position.set(def.x, 2.9, 0);
+  APP.scene.add(obj);
+  // 标签立柱（模块后方，避免近景遮挡部件）
+  mesh(GEO.cyl8, MAT.frame, def.x, 1.45, -1.25, 0.04, 2.9, 0.04, APP.scene);
+}
+
+function buildModules() {
+  const builders = { cells: buildCells, afe: buildAfe, mcu: buildMcu, power: buildPower, hmi: buildHmi };
+  MODS.forEach((def, idx) => {
+    const g = modGroup(def);
+    builders[def.id](g);
+    tag(def, idx);
+  });
+}
+
+/* ============ 3. 动画 ============ */
+function updateScene(t, dt) {
+  if (reducedMotion) return;
+  for (const f of ANIM.fans) f.rotation.y += dt * 6;
+  for (const b of ANIM.beacons) {
+    const k = 0.78 + 0.22 * Math.sin(t * 2.2 + b.phase);
+    b.mesh.scale.setScalar(b.base * k);
+  }
+  for (const l of ANIM.leds) {
+    const k = 0.7 + 0.3 * Math.abs(Math.sin(t * 2.6 + l.phase));
+    l.mesh.scale.setScalar(l.base * k);
+  }
+}
+
+/* ============ 4. 机位补间与 UI ============ */
+const CAM = { activeView: 'overview', tween: null, autoPaused: false };
+const viewButtons = Array.from(document.querySelectorAll('.view-btn'));
+
+function setView(name) {
+  const view = VIEWS[name];
+  if (!view || !APP.camera || !APP.controls) return;
+  CAM.activeView = name;
+  CAM.tween = {
+    start: performance.now(), duration: 1400,
+    fromPos: APP.camera.position.clone(), fromTarget: APP.controls.target.clone(),
+    toPos: view.pos.clone(), toTarget: view.target.clone(), view
+  };
+  APP.controls.enabled = false;
+  APP.controls.autoRotate = false;
+  APP.controls.minDistance = view.minDistance;
+  APP.controls.maxDistance = view.maxDistance;
+  syncViewButtons(name);
+}
+
+function syncViewButtons(name) {
+  viewButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+}
+
+function stepTween(now) {
+  if (!CAM.tween) return;
+  const tw = CAM.tween;
+  const k = clamp((now - tw.start) / tw.duration, 0, 1);
+  const ease = k < 0.5 ? 4 * k * k * k : 1 - Math.pow(-2 * k + 2, 3) / 2;
+  APP.camera.position.lerpVectors(tw.fromPos, tw.toPos, ease);
+  APP.controls.target.lerpVectors(tw.fromTarget, tw.toTarget, ease);
+  APP.controls.update();
+  if (k >= 1) {
+    APP.camera.position.copy(tw.toPos);
+    APP.controls.target.copy(tw.toTarget);
+    APP.controls.minDistance = tw.view.minDistance;
+    APP.controls.maxDistance = tw.view.maxDistance;
+    APP.controls.enabled = true;
+    APP.controls.autoRotate = CAM.activeView === 'overview' && !CAM.autoPaused;
+    CAM.tween = null;
+  }
+}
+
+// 点选模块 → 信息卡
+const infoCard = document.getElementById('info-card');
+const icHead = document.getElementById('ic-head');
+const icTitle = document.getElementById('ic-title');
+const icDesc = document.getElementById('ic-desc');
+const raycaster = new THREE.Raycaster();
+const pointer = new THREE.Vector2();
+let pickGroup = null;
+
+function showInfo(def) {
+  icHead.textContent = `${String(MODS.indexOf(def) + 1).padStart(2, '0')} · ${def.en}`;
+  icTitle.textContent = def.cn;
+  icDesc.textContent = def.desc;
+  infoCard.classList.add('show');
+}
+
+function onPick(e) {
+  const rect = APP.renderer.domElement.getBoundingClientRect();
+  pointer.x = ((e.clientX - rect.left) / rect.width) * 2 - 1;
+  pointer.y = -((e.clientY - rect.top) / rect.height) * 2 + 1;
+  raycaster.setFromCamera(pointer, APP.camera);
+  const groups = APP.scene.children.filter(o => o.userData && o.userData.modId);
+  const hits = raycaster.intersectObjects(groups, true);
+  if (!hits.length) { infoCard.classList.remove('show'); return; }
+  let obj = hits[0].object;
+  while (obj && !(obj.userData && obj.userData.modId)) obj = obj.parent;
+  if (!obj) return;
+  const def = MODS.find(m => m.id === obj.userData.modId);
+  if (def) { showInfo(def); setView(def.id === 'cells' ? 'cells' : def.id); }
+}
+
+function initControlsUI() {
+  const btnPause = document.getElementById('btn-pause');
+  const btnReset = document.getElementById('btn-reset');
+  const setPauseIcon = paused => {
+    btnPause.innerHTML = paused
+      ? '<svg viewBox="0 0 16 16" fill="none"><path d="M4.5 3.2l8 4.8-8 4.8z" fill="currentColor"/></svg>'
+      : '<svg viewBox="0 0 16 16" fill="none"><rect x="4" y="3" width="2.4" height="10" rx="0.5" fill="currentColor"/><rect x="9.6" y="3" width="2.4" height="10" rx="0.5" fill="currentColor"/></svg>';
+  };
+  btnPause.addEventListener('click', () => {
+    CAM.autoPaused = !CAM.autoPaused;
+    APP.controls.autoRotate = !CAM.autoPaused && CAM.activeView === 'overview';
+    setPauseIcon(CAM.autoPaused);
+  });
+  btnReset.addEventListener('click', () => { CAM.autoPaused = false; setPauseIcon(false); setView('overview'); });
+  viewButtons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view || 'overview')));
+  APP.renderer.domElement.addEventListener('click', onPick);
+
+  window.addEventListener('resize', onResize);
+  window.addEventListener('orientationchange', () => setTimeout(onResize, 140));
+  document.addEventListener('visibilitychange', () => {
+    APP.running = !document.hidden;
+    if (APP.running) clock.getDelta();
+  });
+}
+
+function onResize() {
+  const w = window.innerWidth, h = window.innerHeight;
+  APP.camera.aspect = w / h;
+  APP.camera.updateProjectionMatrix();
+  APP.renderer.setSize(w, h);
+  APP.composer.setSize(w, h);
+  APP.labelRenderer.setSize(w, h);
+}
+
+/* ============ 5. 遥测轻量波动（受控） ============ */
+const tel = {
+  soc: document.getElementById('tel-soc'), soh: document.getElementById('tel-soh'),
+  amp: document.getElementById('tel-amp'), temp: document.getElementById('tel-temp'),
+  dv: document.getElementById('tel-dv')
+};
+function paintTelemetry(t) {
+  if (!tel.soc) return;
+  tel.soc.textContent = (86 + Math.sin(t * 0.15) * 0.4).toFixed(1) + '%';
+  tel.soh.textContent = (98.2 + Math.sin(t * 0.05) * 0.1).toFixed(1) + '%';
+  tel.amp.textContent = (12.4 + Math.sin(t * 0.6) * 0.6).toFixed(1) + ' A';
+  tel.temp.textContent = (28.6 + Math.sin(t * 0.3) * 0.5).toFixed(1) + ' °C';
+  tel.dv.textContent = Math.round(12 + Math.sin(t * 0.4) * 3) + ' mV';
+}
+
+/* ============ 6. 主循环 ============ */
+function animate() {
+  requestAnimationFrame(animate);
+  if (!APP.running) return;
+  const dt = Math.min(clock.getDelta(), 0.055);
+  const t = clock.elapsedTime;
+  APP.elapsed = t;
+  stepTween(performance.now());
+  updateScene(t, dt);
+  paintTelemetry(t);
+  APP.controls.update();
+  APP.composer.render();
+  APP.labelRenderer.render(APP.scene, APP.camera);
+}
+
+function init() {
+  buildMaterials();
+  initRenderer(); initScene(); initEnvironment(); initLights(); initComposer();
+  buildSite(); buildModules(); initControlsUI();
+  animate();
+  setTimeout(() => document.getElementById('loader').classList.add('hidden'), 420);
+}
+
+init();
+</script>
+</body>
+</html>
