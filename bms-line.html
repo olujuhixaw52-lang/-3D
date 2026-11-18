@@ -12,11 +12,13 @@
     --muted: #8da4b4;
     --line: rgba(178, 205, 222, 0.18);
     --cyan: #3fc3d8;
-    --blue: #5b7d94;
-    --steel: #6f9fc9;
-    --amber: #f2b134;
-    --green: #37c978;
-    --red: #e0564b;
+    --elec: #5b8db8;   /* 电气 / 监测 */
+    --bms:  #e8924a;   /* BMS / 估算 / 保护 */
+    --heat: #37c978;   /* 热管理 */
+    --struct:#8b7fb0;  /* 结构 / 模组 */
+    --steel:#6f9fc9;
+    --amber:#f2b134;
+    --red:  #e0564b;
     --display: "DIN Alternate", "Avenir Next Condensed", "Helvetica Neue", "Segoe UI", sans-serif;
     --mono: "SF Mono", "Menlo", "Consolas", "Courier New", monospace;
   }
@@ -59,14 +61,33 @@
     margin-top: 5px; font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
     color: rgba(63, 195, 216, 0.82);
   }
+  #brand .nav-row { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 12px; }
   #brand .cross-nav {
-    display: inline-block; margin-top: 6px; pointer-events: auto;
+    display: inline-block; pointer-events: auto;
     font-family: var(--mono); font-size: 10px; letter-spacing: 0.12em;
     color: rgba(157, 188, 207, 0.82); text-decoration: none;
     border-bottom: 1px solid rgba(157, 188, 207, 0.3);
   }
   #brand .cross-nav:hover { color: #f0f3f4; border-color: rgba(63,195,216,0.6); }
-  #brand .nav-row { margin-top: 6px; display: flex; gap: 12px; }
+
+  /* 顶部三级流程条 CELL → MODULE → PACK */
+  #flow {
+    position: fixed; top: clamp(18px, 2.2vw, 30px); left: 50%; transform: translateX(-50%);
+    z-index: 5; display: flex; align-items: center; gap: 10px;
+    font-family: var(--mono); user-select: none;
+  }
+  #flow .step {
+    display: flex; align-items: center; gap: 8px; padding: 7px 13px;
+    border: 1px solid var(--line); border-radius: 8px;
+    background: rgba(12,17,21,0.6); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    color: rgba(202,218,226,0.55); transition: color 0.24s ease, border-color 0.24s ease, background 0.24s ease;
+  }
+  #flow .step .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); }
+  #flow .step .t { font-size: 10px; letter-spacing: 0.14em; }
+  #flow .step .e { font-size: 7px; letter-spacing: 0.1em; color: rgba(147,181,199,0.4); }
+  #flow .step.active { color: #f4f7f8; border-color: rgba(63,195,216,0.45); background: rgba(20,29,34,0.8); }
+  #flow .step.active .dot { background: var(--cyan); box-shadow: 0 0 9px rgba(63,195,216,0.9); }
+  #flow .arrow { color: rgba(157,188,207,0.35); font-size: 11px; }
 
   #telemetry {
     position: fixed; top: clamp(18px, 2.1vw, 30px); right: clamp(18px, 2.4vw, 34px);
@@ -76,7 +97,7 @@
   }
   #telemetry .sig {
     display: inline-block; width: 5px; height: 5px; margin-right: 8px; border-radius: 50%;
-    background: var(--green); box-shadow: 0 0 9px rgba(55, 201, 120, 0.9); vertical-align: 1px;
+    background: var(--heat); box-shadow: 0 0 9px rgba(55, 201, 120, 0.9); vertical-align: 1px;
     animation: sigPulse 3.2s ease-in-out infinite;
   }
   #telemetry .grid { margin-top: 7px; display: grid; grid-template-columns: auto auto; gap: 3px 14px; justify-content: end; }
@@ -89,8 +110,7 @@
     padding: 13px 18px 12px 16px; border: 1px solid var(--line);
     border-left: 2px solid rgba(63, 195, 216, 0.86);
     background: linear-gradient(115deg, rgba(10,14,17,0.82), rgba(13,19,23,0.5));
-    backdrop-filter: blur(13px) saturate(115%);
-    -webkit-backdrop-filter: blur(13px) saturate(115%);
+    backdrop-filter: blur(13px) saturate(115%); -webkit-backdrop-filter: blur(13px) saturate(115%);
     box-shadow: 0 12px 34px rgba(0,0,0,0.28), inset 0 1px 0 rgba(255,255,255,0.035);
     pointer-events: none;
   }
@@ -106,7 +126,7 @@
 
   /* 右侧竖排视角按钮组（边框操作键） */
   #views {
-    position: fixed; right: clamp(22px, 2.7vw, 42px); top: 47%;
+    position: fixed; right: clamp(22px, 2.7vw, 42px); top: 42%;
     z-index: 6; width: 132px; transform: translateY(-50%);
     font-family: var(--mono); user-select: none;
   }
@@ -137,6 +157,30 @@
   #views .view-btn.active::after { height: 17px; }
   #views .view-btn:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; }
 
+  /* 四子系统支柱栏 */
+  #subsys {
+    position: fixed; right: clamp(22px, 2.7vw, 42px); top: calc(42% + 158px);
+    z-index: 6; width: 132px; display: flex; flex-direction: column; gap: 7px;
+    font-family: var(--mono);
+  }
+  #subsys .ss-title { font-size: 8px; letter-spacing: 0.28em; color: rgba(157,188,207,0.5); text-transform: uppercase; margin-bottom: 2px; }
+  #subsys .ss-item {
+    display: flex; align-items: center; gap: 9px; padding: 7px 10px;
+    border: 1px solid var(--line); border-radius: 8px; background: rgba(12,17,21,0.55);
+    color: rgba(202,218,226,0.7); cursor: pointer; text-align: left;
+    transition: background 150ms ease, border-color 150ms ease, transform 90ms ease;
+  }
+  #subsys .ss-item:hover { background: rgba(24,32,38,0.85); border-color: rgba(178,205,222,0.32); }
+  #subsys .ss-item:active { transform: scale(0.985); }
+  #subsys .ss-item:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
+  #subsys .ss-ico {
+    width: 24px; height: 24px; flex: none; display: grid; place-items: center; border-radius: 50%;
+    background: rgba(255,255,255,0.05);
+  }
+  #subsys .ss-ico svg { width: 14px; height: 14px; }
+  #subsys .ss-name { font-size: 10px; letter-spacing: 0.08em; }
+  #subsys .ss-en { font-size: 6.5px; letter-spacing: 0.08em; color: rgba(147,181,199,0.4); }
+
   #toolbar {
     position: fixed; right: clamp(16px, 2.4vw, 34px); bottom: clamp(16px, 2.4vw, 28px);
     z-index: 6; display: flex; gap: 10px;
@@ -152,6 +196,24 @@
   #toolbar button:focus-visible { outline: 2px solid var(--cyan); outline-offset: 2px; }
   #toolbar button svg { width: 18px; height: 18px; }
 
+  /* BMS 功能链（监测 → 估算 → 保护 → 均衡 → 通信） */
+  #bms-chain {
+    position: fixed; bottom: clamp(16px, 2.4vw, 28px); left: 50%; transform: translateX(-50%);
+    z-index: 5; display: flex; align-items: center; gap: 8px;
+    padding: 9px 14px; border: 1px solid var(--line); border-left: 2px solid var(--bms);
+    border-radius: 10px; background: rgba(10,14,17,0.7);
+    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+    font-family: var(--mono); user-select: none;
+  }
+  #bms-chain .bc-title { font-size: 8px; letter-spacing: 0.22em; color: var(--bms); text-transform: uppercase; margin-right: 4px; }
+  #bms-chain .node { display: flex; align-items: center; gap: 6px; font-size: 9px; letter-spacing: 0.08em; color: rgba(202,218,226,0.72); }
+  #bms-chain .node .ni {
+    width: 18px; height: 18px; flex: none; display: grid; place-items: center; border-radius: 50%;
+    background: rgba(232,146,74,0.12); color: var(--bms);
+  }
+  #bms-chain .node .ni svg { width: 11px; height: 11px; }
+  #bms-chain .sep { color: rgba(157,188,207,0.3); font-size: 10px; }
+
   .station-tag {
     font-family: var(--mono); pointer-events: none; user-select: none;
     padding: 5px 9px 6px; border: 1px solid var(--line); border-left: 2px solid var(--tc, var(--cyan));
@@ -163,11 +225,17 @@
     font-size: 8px; letter-spacing: 0.2em; color: var(--tc, var(--cyan)); text-transform: uppercase;
   }
   .station-tag .cn { font-size: 12px; font-weight: 600; letter-spacing: 0.05em; color: #f0f3f4; margin-top: 1px; }
+  .mini-tag {
+    font-family: var(--mono); pointer-events: none; user-select: none; white-space: nowrap;
+    font-size: 8px; letter-spacing: 0.1em; color: rgba(226,239,245,0.88);
+    padding: 2px 7px; border: 1px solid var(--line); border-left: 2px solid var(--tc, var(--cyan));
+    border-radius: 5px; background: rgba(10,14,17,0.82);
+  }
 
   /* 模块信息卡 */
   #info-card {
     position: fixed; left: clamp(16px, 2.4vw, 34px); bottom: clamp(88px, 12vw, 118px);
-    z-index: 5; max-width: 320px; padding: 13px 16px 12px;
+    z-index: 5; max-width: 330px; padding: 13px 16px 12px;
     border: 1px solid var(--line); border-left: 2px solid var(--cyan);
     background: linear-gradient(115deg, rgba(10,14,17,0.88), rgba(13,19,23,0.6));
     backdrop-filter: blur(13px) saturate(115%); -webkit-backdrop-filter: blur(13px) saturate(115%);
@@ -178,6 +246,11 @@
   #info-card .ic-head { font-family: var(--mono); font-size: 8px; letter-spacing: 0.24em; color: var(--cyan); text-transform: uppercase; margin-bottom: 5px; }
   #info-card .ic-title { font-size: 14px; font-weight: 600; letter-spacing: 0.05em; color: #f0f3f4; margin-bottom: 5px; }
   #info-card .ic-desc { font-family: var(--mono); font-size: 10px; line-height: 1.7; letter-spacing: 0.04em; color: rgba(171,195,211,0.78); }
+  #info-card .ic-tags { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 9px; }
+  #info-card .ic-tags span {
+    font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.08em; padding: 3px 8px;
+    border: 1px solid var(--line); border-radius: 999px; color: rgba(193,217,232,0.8);
+  }
 
   #loader {
     position: fixed; inset: 0; z-index: 20; display: grid; place-items: center;
@@ -209,10 +282,16 @@
     #telemetry .grid { display: none; }
     #hud { padding: 10px 13px 9px 12px; }
     #hud .hint { font-size: 9px; white-space: normal; }
+    #flow { gap: 6px; }
+    #flow .step { padding: 5px 9px; }
+    #flow .step .e { display: none; }
     .station-tag { padding: 5px 8px 6px; }
     .station-tag .cn { font-size: 11px; }
     #views { width: 104px; right: 14px; }
     #views .view-btn small { display: none; }
+    #subsys { width: 104px; right: 14px; }
+    #subsys .ss-en { display: none; }
+    #bms-chain { display: none; }
   }
   @media (prefers-reduced-motion: reduce) {
     #loader .bar::after, #telemetry .sig { animation: none; }
@@ -227,13 +306,21 @@
 <header id="brand">
   <div class="kicker">Edge-AI BMS Bench · 02</div>
   <h1>先进 <em>BMS</em> 智控沙盘</h1>
-  <div class="sub">Cells · AFE · MCU · Power · HMI · Interactive 3D Bench</div>
+  <div class="sub">Cell → Module → Pack · BMS · Thermal · Interactive 3D Bench</div>
   <div class="sign">双鱼座：cygzs16888</div>
   <div class="nav-row">
     <a class="cross-nav" href="index.html">← 月面建设工地</a>
     <a class="cross-nav" href="pack-line.html">PACK 沙盘 →</a>
   </div>
 </header>
+
+<nav id="flow" aria-label="总成层级流程">
+  <div class="step" data-step="cell"><span class="dot"></span><span><span class="t">电芯</span> <span class="e">CELL</span></span></div>
+  <span class="arrow">→</span>
+  <div class="step" data-step="module"><span class="dot"></span><span><span class="t">模组</span> <span class="e">MODULE</span></span></div>
+  <span class="arrow">→</span>
+  <div class="step" data-step="pack"><span class="dot"></span><span><span class="t">PACK 总成</span> <span class="e">PACK</span></span></div>
+</nav>
 
 <aside id="telemetry">
   <div><span class="sig"></span>BMS ONLINE · 800V CONCEPT / LV LAB</div>
@@ -249,23 +336,42 @@
 
 <aside id="hud">
   <div class="eyebrow">操作 / CONTROLS</div>
-  <div class="hint"><b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <b>右键拖动</b> 平移 · <b>点选模块</b> 查看说明</div>
+  <div class="hint"><b>拖拽</b> 旋转视角 · <b>滚轮</b> 缩放 · <b>右键拖动</b> 平移 · <b>点选层级</b> 查看说明</div>
 </aside>
 
 <nav id="views" aria-label="视角切换">
   <div class="side-head">VIEW / 视角</div>
   <button class="view-btn active" data-view="overview">全景<small>OVERVIEW</small></button>
-  <button class="view-btn" data-view="cells">电芯组<small>CELLS</small></button>
-  <button class="view-btn" data-view="afe">监测层<small>AFE</small></button>
-  <button class="view-btn" data-view="mcu">主控 AI<small>MCU / AI</small></button>
-  <button class="view-btn" data-view="power">功率开关<small>POWER</small></button>
-  <button class="view-btn" data-view="hmi">交互 HMI<small>HMI</small></button>
+  <button class="view-btn" data-view="cell">电芯级<small>CELL</small></button>
+  <button class="view-btn" data-view="module">模组级<small>MODULE</small></button>
+  <button class="view-btn" data-view="pack">PACK 总成<small>PACK</small></button>
 </nav>
+
+<aside id="subsys" aria-label="四大子系统">
+  <div class="ss-title">子系统 / SUBSYSTEMS</div>
+  <button class="ss-item" data-view="pack" aria-label="电气系统">
+    <span class="ss-ico" style="color:var(--elec)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M13 2L4 14h6l-1 8 9-12h-6l1-8z" stroke-linejoin="round"/></svg></span>
+    <span><div class="ss-name">电气系统</div><div class="ss-en">HV · Fuse · Relay</div></span>
+  </button>
+  <button class="ss-item" data-view="pack" aria-label="管理系统 BMS">
+    <span class="ss-ico" style="color:var(--bms)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3a7 7 0 0 0-4 12.7c.6.5 1 1.3 1 2.1h6c0-.8.4-1.6 1-2.1A7 7 0 0 0 12 3z" stroke-linejoin="round"/><path d="M9.5 19h5" stroke-linecap="round"/></svg></span>
+    <span><div class="ss-name">管理系统</div><div class="ss-en">BMS · Monitor</div></span>
+  </button>
+  <button class="ss-item" data-view="pack" aria-label="热管理系统">
+    <span class="ss-ico" style="color:var(--heat)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><circle cx="12" cy="12" r="3.2"/><path d="M12 2v3M12 19v3M2 12h3M19 12h3M5 5l2 2M17 17l2 2M19 5l-2 2M7 17l-2 2" stroke-linecap="round"/></svg></span>
+    <span><div class="ss-name">热管理</div><div class="ss-en">Air · Liquid · DCL</div></span>
+  </button>
+  <button class="ss-item" data-view="module" aria-label="结构系统">
+    <span class="ss-ico" style="color:var(--struct)"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9L12 3z" stroke-linejoin="round"/><path d="M12 12l8-4.5M12 12v9M12 12L4 7.5" stroke-linejoin="round"/></svg></span>
+    <span><div class="ss-name">结构系统</div><div class="ss-en">Case · Frame · IP</div></span>
+  </button>
+</aside>
 
 <aside id="info-card" aria-live="polite">
   <div class="ic-head" id="ic-head">MODULE</div>
   <div class="ic-title" id="ic-title"></div>
   <div class="ic-desc" id="ic-desc"></div>
+  <div class="ic-tags" id="ic-tags"></div>
 </aside>
 
 <nav id="toolbar" aria-label="播放控制">
@@ -276,6 +382,19 @@
     <svg viewBox="0 0 16 16" fill="none"><path d="M3.2 6.2A5.2 5.2 0 1 1 2.9 9" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/><path d="M2.8 2.7v3.7H6.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round"/></svg>
   </button>
 </nav>
+
+<aside id="bms-chain" aria-label="BMS 功能链">
+  <span class="bc-title">BMS</span>
+  <span class="node"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 12h4l2-6 4 12 2-6h6" stroke-linecap="round" stroke-linejoin="round"/></svg></span>监测</span>
+  <span class="sep">→</span>
+  <span class="node"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 19l5-6 4 3 7-9" stroke-linecap="round" stroke-linejoin="round"/><path d="M16 7h4v4" stroke-linecap="round" stroke-linejoin="round"/></svg></span>估算</span>
+  <span class="sep">→</span>
+  <span class="node"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3l7 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" stroke-linejoin="round"/></svg></span>保护</span>
+  <span class="sep">→</span>
+  <span class="node"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M8 9l-3 3 3 3M16 9l3 3-3 3M12 6v12" stroke-linecap="round" stroke-linejoin="round"/></svg></span>均衡</span>
+  <span class="sep">→</span>
+  <span class="node"><span class="ni"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M5 12a7 7 0 0 1 14 0M8.5 12a3.5 3.5 0 0 1 7 0" stroke-linecap="round"/><circle cx="12" cy="12" r="1.4" fill="currentColor"/><path d="M12 15v5" stroke-linecap="round"/></svg></span>通信</span>
+</aside>
 
 <div id="loader">
   <div class="inner">
@@ -317,27 +436,23 @@ const APP = {
 };
 const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
 
-// 五个分层模块：cells 电芯 / afe 监测 / mcu 主控 / power 功率 / hmi 交互
 const MODS = [
-  { id: 'cells', cn: '电芯组',   en: 'CELL ARRAY',     x: -6.4, tc: '#5b7d94',
-    desc: '4S2P 配置 8 节电芯阵列，透明仓体便于观察；镍带串并联、平衡线中点采样，XT60 充放电口与主熔断器成组布置。' },
-  { id: 'afe',  cn: '监测层',   en: 'AFE SENSING',    x: -3.2, tc: '#3fc3d8',
-    desc: '多通道 AFE 监测板，串联电流传感器（INA226/分流）、NTC 温度探头与气压/气体传感器，构成热失控多参数预警采集端。' },
-  { id: 'mcu',  cn: '主控 AI',  en: 'MCU / EDGE AI',  x:  0.0, tc: '#6f9fc9',
-    desc: 'ESP32 / STM32 实时保护与轻量 ML 推理，混合 SOC/SOH 估算与异常检测；可选 Raspberry Pi 跑等效电路模型做数字孪生。' },
-  { id: 'power',cn: '功率开关', en: 'POWER STAGE',    x:  3.2, tc: '#f2b134',
-    desc: 'N-MOSFET 固态开关模拟 SiC 高速分断，继电器冗余切断，含预充电阻与主动均衡板；散热片与风扇由温度 PWM 控制。' },
-  { id: 'hmi',  cn: '交互 HMI', en: 'HMI / CAN',     x:  6.4, tc: '#37c978',
-    desc: 'OLED/触摸屏显示 SOC、单体电压、温度、电流与 AI 结果；故障注入按钮模拟过压/欠压/过温/短路，CAN 模块对接仪表盘节点。' }
+  { id: 'cell', cn: '电芯级', en: 'CELL', x: -5.6, tc: '#5b8db8',
+    desc: '单节锂离子电芯（圆柱 / 方形 / 软包），约 3.7V。4S2P 八节阵列置于透明仓体，极耳经汇流排串并联，是 PACK 的化学能量单元。',
+    tags: ['圆柱 21700', '汇流排', '平衡线', 'XT60', '熔断器'] },
+  { id: 'module', cn: '模组级', en: 'MODULE', x: 0, tc: '#8b7fb0',
+    desc: '多个电芯串并联集成进标准框架，配采样线束与局部固定压条，形成可搬运、可互换的中间模组单元。',
+    tags: ['框架固定', '采样线束', '压条', '局部绝缘'] },
+  { id: 'pack', cn: 'PACK 总成', en: 'PACK', x: 5.6, tc: '#6f9fc9',
+    desc: '多个模组经铜排总线集成 BMS、热管理、高压盒与外壳，构成可直接为设备供能的完整电池包。',
+    tags: ['BMS 板', 'HV Box', '风冷', '液冷', '直冷相变', '上盖 · IP 防护'] }
 ];
 
 const VIEWS = {
-  overview: { pos: new THREE.Vector3(0, 10, 19),   target: new THREE.Vector3(0, 1.2, 0),    minDistance: 6,  maxDistance: 34 },
-  cells:    { pos: new THREE.Vector3(-6.4, 4.4, 7.6), target: new THREE.Vector3(-6.4, 1.1, 0), minDistance: 2.4, maxDistance: 16 },
-  afe:      { pos: new THREE.Vector3(-3.2, 4.0, 7.0), target: new THREE.Vector3(-3.2, 1.0, 0), minDistance: 2.2, maxDistance: 15 },
-  mcu:      { pos: new THREE.Vector3(0,    4.0, 7.0), target: new THREE.Vector3(0,    1.0, 0), minDistance: 2.2, maxDistance: 15 },
-  power:    { pos: new THREE.Vector3(3.2,  4.0, 7.0), target: new THREE.Vector3(3.2,  1.0, 0), minDistance: 2.2, maxDistance: 15 },
-  hmi:      { pos: new THREE.Vector3(6.4,  4.4, 7.6), target: new THREE.Vector3(6.4,  1.1, 0), minDistance: 2.4, maxDistance: 16 }
+  overview: { pos: new THREE.Vector3(0, 10, 19),    target: new THREE.Vector3(0, 1.2, 0),  minDistance: 6,  maxDistance: 34 },
+  cell:     { pos: new THREE.Vector3(-5.6, 4.2, 7.4), target: new THREE.Vector3(-5.6, 1.1, 0), minDistance: 2.4, maxDistance: 16 },
+  module:   { pos: new THREE.Vector3(0,    4.0, 7.0), target: new THREE.Vector3(0,    1.0, 0), minDistance: 2.2, maxDistance: 15 },
+  pack:     { pos: new THREE.Vector3(5.6,  5.2, 8.6), target: new THREE.Vector3(5.6,  0.9, 0), minDistance: 2.4, maxDistance: 16 }
 };
 
 const GEO = {
@@ -345,7 +460,6 @@ const GEO = {
   cyl:  new THREE.CylinderGeometry(1, 1, 1, 16, 1, false),
   cyl8: new THREE.CylinderGeometry(1, 1, 1, 8, 1, false),
   sph:  new THREE.SphereGeometry(1, 18, 12),
-  cone: new THREE.ConeGeometry(1, 1, 16, 1, false),
   torus:new THREE.TorusGeometry(1, 0.08, 6, 24)
 };
 
@@ -366,11 +480,12 @@ function buildMaterials() {
   mat('wire',    { color: 0x22272a, roughness: 0.7,  metalness: 0.0 });
   mat('wireB',   { color: 0x3a6ea5, roughness: 0.7,  metalness: 0.0 });
   mat('wireY',   { color: 0xd8b83a, roughness: 0.7,  metalness: 0.0 });
-  mat('cyan',    { color: 0x3fc3d8, roughness: 0.5,  metalness: 0.1, emissive: 0x1c7d8e, emissiveIntensity: 0.8 });
-  mat('blue',    { color: 0x5b7d94, roughness: 0.7,  metalness: 0.0 });
+  mat('elec',    { color: 0x5b8db8, roughness: 0.5,  metalness: 0.1, emissive: 0x1f4f6e, emissiveIntensity: 0.7 });
+  mat('bms',     { color: 0xe8924a, roughness: 0.5,  metalness: 0.1, emissive: 0x7a3f16, emissiveIntensity: 0.8 });
+  mat('heat',    { color: 0x37c978, roughness: 0.4,  metalness: 0.1, emissive: 0x1f9d58, emissiveIntensity: 0.9 });
+  mat('struct',  { color: 0x8b7fb0, roughness: 0.55, metalness: 0.1 });
   mat('steel',   { color: 0x6f9fc9, roughness: 0.5,  metalness: 0.2 });
   mat('amber',   { color: 0xf2b134, roughness: 0.5,  metalness: 0.1 });
-  mat('green',   { color: 0x37c978, roughness: 0.4,  metalness: 0.1, emissive: 0x1f9d58, emissiveIntensity: 0.9 });
   mat('red',     { color: 0xe0564b, roughness: 0.4,  metalness: 0.1, emissive: 0x9c2b23, emissiveIntensity: 0.7 });
   mat('screen',  { color: 0x0d2a2e, roughness: 0.35, metalness: 0.1, emissive: 0x1a7882, emissiveIntensity: 0.85 });
   mat('glass',   { color: 0x9fc6d4, roughness: 0.12, metalness: 0.0, transparent: true, opacity: 0.16 });
@@ -479,7 +594,6 @@ function initComposer() {
 function buildSite() {
   mesh(GEO.box, MAT.plinth, 0, -0.2, 0, 17.4, 0.4, 9.4, APP.scene);
   mesh(GEO.box, MAT.floor, 0, 0.005, 0, 17.0, 0.02, 9.0, APP.scene);
-  // 分区色带：沿台面前后沿标出五个模块归属
   MODS.forEach((m) => {
     const cm = mat('band_' + m.id, { color: new THREE.Color(m.tc), roughness: 0.7, metalness: 0.0 });
     mesh(GEO.box, cm, m.x, 0.02, -4.35, 2.9, 0.012, 0.22, APP.scene).receiveShadow = true;
@@ -487,7 +601,7 @@ function buildSite() {
   });
 }
 
-/* === 模块建模 === */
+/* === 建模 === */
 const ANIM = { fans: [], beacons: [], leds: [] };
 
 function cell21700(x, y, z, parent) {
@@ -505,132 +619,97 @@ function modGroup(def) {
   const g = new THREE.Group();
   g.position.set(def.x, 0, 0);
   g.userData.modId = def.id;
-  // 不可见拾取盒：扩大点选区域
   const pick = mesh(GEO.box, MAT.pick, 0, 0.9, 0, 2.8, 1.8, 2.0, g);
   pick.castShadow = false; pick.receiveShadow = false;
   APP.scene.add(g);
   return g;
 }
 
-function buildCells(g) {
-  // 透明电池仓：底板 + 四壁
+/* 段一：电芯级 */
+function buildCell(g) {
   mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.6, 0.1, 1.8, g);
   mesh(GEO.box, MAT.glass, 0, 1.15, -0.85, 2.6, 1.2, 0.05, g);
   mesh(GEO.box, MAT.glass, 0, 1.15,  0.85, 2.6, 1.2, 0.05, g);
   mesh(GEO.box, MAT.glass, -1.3, 1.15, 0, 0.05, 1.2, 1.8, g);
   mesh(GEO.box, MAT.glass,  1.3, 1.15, 0, 0.05, 1.2, 1.8, g);
-  // 4S2P：两排四列电芯
   for (let i = 0; i < 4; i++) for (let j = 0; j < 2; j++)
     cell21700(-0.87 + i * 0.58, 0.92, -0.34 + j * 0.68, g);
-  // 顶部汇流排与平衡线
   mesh(GEO.box, MAT.busbar, 0, 1.28, 0, 2.3, 0.05, 0.2, g);
   for (let i = 0; i < 4; i++) {
     const w = mesh(GEO.cyl, MAT.wireY, -0.87 + i * 0.58, 1.1, 0.4, 0.02, 0.5, 0.02, g);
     w.rotation.z = Math.PI / 2;
   }
-  // XT60 接口 + 熔断器
   mesh(GEO.box, MAT.cabinet, -1.35, 0.55, 0.7, 0.3, 0.22, 0.3, g);
   mesh(GEO.cyl, MAT.frame, 1.35, 0.55, -0.7, 0.12, 0.3, 0.12, g);
-  beacon(-1.2, -0.85, MAT.green, g);
+  beacon(-1.2, -0.85, MAT.elec, g);
 }
 
-function buildAfe(g) {
-  // AFE 主板
-  mesh(GEO.box, MAT.pcb, 0, 0.55, 0, 2.4, 0.06, 1.6, g);
-  // AFE 芯片 ×2
-  mesh(GEO.box, MAT.chip, -0.55, 0.66, -0.2, 0.5, 0.1, 0.5, g);
-  mesh(GEO.box, MAT.chip,  0.55, 0.66, -0.2, 0.5, 0.1, 0.5, g);
-  // 电流传感器（分流/模块）
-  mesh(GEO.box, MAT.cabinet, 0, 0.66, 0.5, 0.7, 0.14, 0.34, g);
-  // NTC 探头
-  for (let i = 0; i < 3; i++)
-    mesh(GEO.sph, MAT.red, -0.7 + i * 0.7, 0.72, -0.6, 0.07, 0.07, 0.07, g);
-  // 气压 / 气体传感器（热失控模拟区）
-  mesh(GEO.box, MAT.cabinet, 0.85, 0.7, 0.5, 0.4, 0.22, 0.34, g);
-  mesh(GEO.cyl, MAT.frame, 0.85, 0.86, 0.5, 0.08, 0.1, 0.08, g);
+/* 段二：模组级（框架总成） */
+function buildModule(g) {
+  // 底座
+  mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.6, 0.12, 1.8, g);
+  // 四角立柱 + 上边框
+  [[-1.2, -0.8], [1.2, -0.8], [-1.2, 0.8], [1.2, 0.8]].forEach(([dx, dz]) =>
+    mesh(GEO.cyl8, MAT.frame, dx, 1.15, dz, 0.05, 1.3, 0.05, g));
+  mesh(GEO.box, MAT.frame, 0, 1.8, -0.8, 2.6, 0.07, 0.07, g);
+  mesh(GEO.box, MAT.frame, 0, 1.8,  0.8, 2.6, 0.07, 0.07, g);
+  // 内部电芯两排三列
+  for (let i = 0; i < 3; i++) for (let j = 0; j < 2; j++)
+    cell21700(-0.7 + i * 0.7, 0.92, -0.34 + j * 0.68, g);
+  // 模组汇流排
+  mesh(GEO.box, MAT.busbar, 0, 1.28, 0, 2.0, 0.05, 0.2, g);
+  // 固定压条
+  mesh(GEO.box, MAT.struct, 0, 1.18, -0.34, 2.1, 0.05, 0.16, g);
+  mesh(GEO.box, MAT.struct, 0, 1.18,  0.34, 2.1, 0.05, 0.16, g);
   // 采样线束
   for (let i = 0; i < 3; i++) {
-    const w = mesh(GEO.cyl, MAT.wireB, -0.6 + i * 0.6, 0.62, 0.0, 0.022, 0.7, 0.022, g);
+    const w = mesh(GEO.cyl, MAT.wireB, -0.7 + i * 0.7, 0.62, 0.0, 0.022, 0.7, 0.022, g);
     w.rotation.z = Math.PI / 2;
   }
-  beacon(-1.1, 0.8, MAT.cyan, g);
+  beacon(-1.1, 0.8, MAT.struct, g);
 }
 
-function buildMcu(g) {
-  // ESP32 主控大板
-  mesh(GEO.box, MAT.pcb2, 0, 0.55, 0, 2.3, 0.06, 1.7, g);
-  mesh(GEO.box, MAT.chip, -0.3, 0.66, 0, 0.55, 0.12, 0.5, g);
-  // 排针
-  for (let i = 0; i < 6; i++)
-    mesh(GEO.cyl8, MAT.frame, 0.2 + i * 0.16, 0.64, 0.6, 0.03, 0.12, 0.03, g);
-  // 天线
-  const ant = mesh(GEO.cyl, MAT.frame, -0.95, 0.95, -0.5, 0.03, 0.7, 0.03, g);
-  ant.rotation.z = 0.25;
-  // 可选 RPi 数字孪生小板叠放
-  mesh(GEO.box, MAT.pcb, 0.55, 0.78, -0.35, 0.7, 0.05, 0.6, g);
-  mesh(GEO.box, MAT.chip, 0.55, 0.86, -0.35, 0.3, 0.08, 0.3, g);
-  // 状态 LED（呼吸）
-  const led1 = mesh(GEO.sph, MAT.green, -0.9, 0.64, 0.5, 0.07, 0.07, 0.07, g);
-  const led2 = mesh(GEO.sph, MAT.cyan, -0.7, 0.64, 0.5, 0.07, 0.07, 0.07, g);
-  ANIM.leds.push({ mesh: led1, base: 0.07, phase: 0 });
-  ANIM.leds.push({ mesh: led2, base: 0.07, phase: 1.4 });
-  beacon(1.05, 0.8, MAT.steel, g);
-}
-
-function buildPower(g) {
-  // 功率底板
-  mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.5, 0.08, 1.7, g);
-  // MOSFET ×2 + 散热片齿
-  [-0.55, 0.55].forEach((dx) => {
-    mesh(GEO.box, MAT.chip, dx, 0.66, -0.2, 0.5, 0.16, 0.4, g);
-    for (let i = 0; i < 5; i++)
-      mesh(GEO.box, MAT.heatsink, dx - 0.16 + i * 0.08, 0.86, -0.2, 0.03, 0.28, 0.36, g);
+/* 段三：PACK 总成 */
+function buildPack(g) {
+  // 下箱体：底板 + 四矮壁
+  mesh(GEO.box, MAT.frame, 0, 0.5, 0, 2.9, 0.12, 2.0, g);
+  mesh(GEO.box, MAT.frame, 0, 0.72, -0.95, 2.9, 0.44, 0.08, g);
+  mesh(GEO.box, MAT.frame, 0, 0.72,  0.95, 2.9, 0.44, 0.08, g);
+  mesh(GEO.box, MAT.frame, -1.4, 0.72, 0, 0.08, 0.44, 1.9, g);
+  mesh(GEO.box, MAT.frame,  1.4, 0.72, 0, 0.08, 0.44, 1.9, g);
+  // 内置两个模组块
+  [-0.7, 0.7].forEach((dx) => {
+    mesh(GEO.box, MAT.pcb2, dx, 0.66, 0, 1.1, 0.16, 1.5, g);
+    for (let i = 0; i < 3; i++)
+      mesh(GEO.cyl, MAT.cell, dx - 0.3 + i * 0.3, 0.84, -0.35, 0.11, 0.3, 0.11, g);
   });
-  // 继电器冗余 ×2
-  mesh(GEO.box, MAT.cabinet, -0.7, 0.7, 0.5, 0.42, 0.3, 0.36, g);
-  mesh(GEO.box, MAT.cabinet,  0.7, 0.7, 0.5, 0.42, 0.3, 0.36, g);
-  // 预充电阻
-  mesh(GEO.cyl, MAT.amber, 0, 0.72, -0.7, 0.1, 0.4, 0.1, g);
-  // 主动均衡板
-  mesh(GEO.box, MAT.pcb, 0, 0.6, 0.75, 1.2, 0.05, 0.3, g);
-  // 散热风扇（旋转）
-  const fan = new THREE.Group(); fan.position.set(1.05, 0.7, -0.7); g.add(fan);
-  mesh(GEO.cyl, MAT.frame, 0, 0, 0, 0.28, 0.06, 0.28, fan);
-  const blades = new THREE.Group(); fan.add(blades);
-  for (let i = 0; i < 4; i++) {
-    const b = mesh(GEO.box, MAT.heatsink, 0, 0.04, 0, 0.22, 0.02, 0.07, blades);
-    b.rotation.y = i * Math.PI / 2;
-  }
-  ANIM.fans.push(blades);
-  // 铜排
-  mesh(GEO.box, MAT.busbar, 0, 0.6, -0.45, 2.0, 0.05, 0.16, g);
-  // 紧急切断按钮
-  mesh(GEO.cyl8, MAT.red, 0, 0.64, 0.85, 0.16, 0.16, 0.16, g);
-  beacon(-1.1, 0.8, MAT.amber, g);
-}
-
-function buildHmi(g) {
-  // 触摸屏/ OLED
-  mesh(GEO.box, MAT.cabinet, 0, 0.95, -0.3, 1.7, 0.9, 0.14, g);
-  mesh(GEO.box, MAT.screen, 0, 0.95, -0.21, 1.4, 0.66, 0.04, g);
-  // 屏内读数条：SOC / 单体电压 / 温度
-  mesh(GEO.box, MAT.cyan,  0, 1.12, -0.185, 1.0, 0.05, 0.02, g);
-  mesh(GEO.box, MAT.green, -0.2, 0.96, -0.185, 0.6, 0.04, 0.02, g);
-  mesh(GEO.box, MAT.amber, -0.3, 0.81, -0.185, 0.4, 0.04, 0.02, g);
-  // 故障注入按钮 ×4
-  const btnMats = [MAT.red, MAT.amber, MAT.blue, MAT.chip];
-  for (let i = 0; i < 4; i++)
-    mesh(GEO.cyl8, btnMats[i], -0.66 + i * 0.44, 0.62, 0.5, 0.13, 0.12, 0.13, g);
-  // CAN 模块 + 蜂鸣器
-  mesh(GEO.box, MAT.pcb2, -0.7, 0.55, 0.0, 0.5, 0.06, 0.4, g);
-  mesh(GEO.cyl, MAT.cabinet, 0.75, 0.6, 0.0, 0.14, 0.2, 0.14, g);
-  // RGB LED 条
-  const rgb = [MAT.red, MAT.amber, MAT.green, MAT.cyan];
-  for (let i = 0; i < 4; i++) {
-    const led = mesh(GEO.sph, rgb[i], -0.45 + i * 0.3, 0.66, 0.8, 0.07, 0.07, 0.07, g);
-    ANIM.leds.push({ mesh: led, base: 0.07, phase: i * 0.8 });
-  }
-  beacon(1.15, 0.8, MAT.green, g);
+  // BMS 板（橙标识，右后沿外露）
+  mesh(GEO.box, MAT.pcb, 1.05, 0.98, -0.62, 0.7, 0.06, 0.5, g);
+  mesh(GEO.box, MAT.chip, 1.05, 1.06, -0.62, 0.3, 0.08, 0.3, g);
+  const bmsLed = mesh(GEO.sph, MAT.bms, 0.82, 1.06, -0.62, 0.07, 0.07, 0.07, g);
+  ANIM.leds.push({ mesh: bmsLed, base: 0.07, phase: 0 });
+  // HV Box 高压盒（左后沿外露）+ 铜排
+  mesh(GEO.box, MAT.cabinet, -1.15, 0.95, -0.6, 0.5, 0.32, 0.4, g);
+  mesh(GEO.box, MAT.busbar, 0, 0.7, -0.55, 2.4, 0.05, 0.16, g);
+  // 热管理：冷板 + 前侧双风扇
+  mesh(GEO.box, MAT.heat, 0, 0.58, 0, 2.6, 0.04, 1.7, g);
+  [-0.7, 0.7].forEach((dx) => {
+    const fan = new THREE.Group(); fan.position.set(dx, 0.66, 0.72); g.add(fan);
+    mesh(GEO.cyl, MAT.frame, 0, 0, 0, 0.26, 0.06, 0.26, fan);
+    const blades = new THREE.Group(); fan.add(blades);
+    for (let i = 0; i < 4; i++) {
+      const b = mesh(GEO.box, MAT.heatsink, 0, 0.04, 0, 0.2, 0.02, 0.07, blades);
+      b.rotation.y = i * Math.PI / 2;
+    }
+    ANIM.fans.push(blades);
+  });
+  // 半透明上盖（后侧掀起）
+  const lid = mesh(GEO.box, MAT.glass, 0, 1.55, -0.85, 2.9, 0.05, 1.5, g);
+  lid.rotation.x = -0.5;
+  miniTag('BMS 主控', '#e8924a', 1.05, 1.4, -0.62, g);
+  miniTag('HV Box', '#5b8db8', -1.15, 1.3, -0.6, g);
+  miniTag('热管理 · 冷板', '#37c978', 0, 1.0, 0.72, g);
+  beacon(1.2, 0.8, MAT.steel, g);
 }
 
 function tag(def, idx) {
@@ -641,12 +720,21 @@ function tag(def, idx) {
   const obj = new CSS2DObject(div);
   obj.position.set(def.x, 2.9, 0);
   APP.scene.add(obj);
-  // 标签立柱（模块后方，避免近景遮挡部件）
   mesh(GEO.cyl8, MAT.frame, def.x, 1.45, -1.25, 0.04, 2.9, 0.04, APP.scene);
 }
 
+function miniTag(text, color, x, y, z, parent) {
+  const div = document.createElement('div');
+  div.className = 'mini-tag';
+  div.style.setProperty('--tc', color);
+  div.textContent = text;
+  const obj = new CSS2DObject(div);
+  obj.position.set(x, y, z);
+  parent.add(obj);
+}
+
 function buildModules() {
-  const builders = { cells: buildCells, afe: buildAfe, mcu: buildMcu, power: buildPower, hmi: buildHmi };
+  const builders = { cell: buildCell, module: buildModule, pack: buildPack };
   MODS.forEach((def, idx) => {
     const g = modGroup(def);
     builders[def.id](g);
@@ -671,6 +759,8 @@ function updateScene(t, dt) {
 /* ============ 4. 机位补间与 UI ============ */
 const CAM = { activeView: 'overview', tween: null, autoPaused: false };
 const viewButtons = Array.from(document.querySelectorAll('.view-btn'));
+const flowSteps = Array.from(document.querySelectorAll('#flow .step'));
+const subsItems = Array.from(document.querySelectorAll('.ss-item'));
 
 function setView(name) {
   const view = VIEWS[name];
@@ -686,10 +776,14 @@ function setView(name) {
   APP.controls.minDistance = view.minDistance;
   APP.controls.maxDistance = view.maxDistance;
   syncViewButtons(name);
+  syncFlow(name);
 }
 
 function syncViewButtons(name) {
   viewButtons.forEach(b => b.classList.toggle('active', b.dataset.view === name));
+}
+function syncFlow(name) {
+  flowSteps.forEach(s => s.classList.toggle('active', s.dataset.step === name));
 }
 
 function stepTween(now) {
@@ -711,19 +805,23 @@ function stepTween(now) {
   }
 }
 
-// 点选模块 → 信息卡
+/* 点选层级 → 信息卡 */
 const infoCard = document.getElementById('info-card');
 const icHead = document.getElementById('ic-head');
 const icTitle = document.getElementById('ic-title');
 const icDesc = document.getElementById('ic-desc');
+const icTags = document.getElementById('ic-tags');
 const raycaster = new THREE.Raycaster();
 const pointer = new THREE.Vector2();
-let pickGroup = null;
 
 function showInfo(def) {
   icHead.textContent = `${String(MODS.indexOf(def) + 1).padStart(2, '0')} · ${def.en}`;
   icTitle.textContent = def.cn;
   icDesc.textContent = def.desc;
+  icTags.innerHTML = '';
+  (def.tags || []).forEach(t => {
+    const s = document.createElement('span'); s.textContent = t; icTags.appendChild(s);
+  });
   infoCard.classList.add('show');
 }
 
@@ -739,7 +837,7 @@ function onPick(e) {
   while (obj && !(obj.userData && obj.userData.modId)) obj = obj.parent;
   if (!obj) return;
   const def = MODS.find(m => m.id === obj.userData.modId);
-  if (def) { showInfo(def); setView(def.id === 'cells' ? 'cells' : def.id); }
+  if (def) { showInfo(def); setView(def.id); }
 }
 
 function initControlsUI() {
@@ -757,6 +855,7 @@ function initControlsUI() {
   });
   btnReset.addEventListener('click', () => { CAM.autoPaused = false; setPauseIcon(false); setView('overview'); });
   viewButtons.forEach(btn => btn.addEventListener('click', () => setView(btn.dataset.view || 'overview')));
+  subsItems.forEach(it => it.addEventListener('click', () => setView(it.dataset.view || 'pack')));
   APP.renderer.domElement.addEventListener('click', onPick);
 
   window.addEventListener('resize', onResize);
